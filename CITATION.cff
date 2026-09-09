@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+title: Suno AI Automation Skill for AI Agents
+message: "If you use this skill or its DOM research, please cite it."
+type: software
+authors:
+  - family-names: Shramko
+    given-names: Andrii
+    email: zmei116@gmail.com
+    orcid: ""
+repository-code: "https://github.com/AndriiShramko/suno-ai-agent-automation-skill"
+abstract: >-
+  A verified DOM map and JavaScript helper library that lets an AI agent
+  (Claude Code, Cursor, or any LLM able to run JavaScript in a browser tab)
+  operate the Suno AI web application end to end — filling lyrics, style,
+  exclude-styles, title and duration, submitting a generation, and verifying
+  it started — without screenshots, computer vision, coordinate clicking, or a
+  paid API. Documents working techniques for Lexical contenteditable editors,
+  React-controlled inputs, React prop invocation on buttons, ARIA sliders, and
+  hidden-tab limitations.
+keywords:
+  - suno
+  - suno-ai
+  - ai-agents
+  - claude-code
+  - browser-automation
+  - dom-automation
+  - lexical-editor
+  - react
+  - ai-music
+  - agent-skills
+license: CC-BY-4.0
+date-released: "2026-09-09"
+version: "1.0.0"

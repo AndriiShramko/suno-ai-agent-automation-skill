@@ -1,7 +1,20 @@
 # Suno AI — карта DOM и рабочие приёмы
 
-**Проверено вживую:** 2026-09-09, Suno web, модель по умолчанию **v5.5** (`chirp-fenix`), план Pro.
+**Проверено вживую:** 2026-09-10 (первичная карта 2026-09-09), Suno web, модель по умолчанию **v5.5** (`chirp-fenix`), план Pro.
 Каждая строка ниже получена экспериментом в браузере, а не из документации.
+
+## 0. Изменения 2026-09-10
+
+- URL теперь несёт режим: `/create?mode=SIMPLE`. Страница может открыться в **Simple**, даже если прошлая сессия была в Advanced.
+- **Переключение вкладки режима сломалось для `.click()`.** У `[role="tab"]` больше **нет** `onClick` — только `onKeyDown`, `onMouseDown`, `onPointerDown`. Работает вызов `onPointerDown` с **полными полями pointer-события**:
+  ```js
+  p.onPointerDown({preventDefault(){},stopPropagation(){},nativeEvent:{},currentTarget:tab,target:tab,
+                   type:'pointerdown',button:0,buttons:1,pointerId:1,pointerType:'mouse',isPrimary:true});
+  ```
+  Обрезанный объект `{type:'click'}` не срабатывает.
+- Появился четвёртый слайдер — **`Variety`** (наблюдалось значение 1). Назначение не проверялось.
+- **Диагностика «я не в Advanced»:** если `setNative` падает с `TypeError: Illegal invocation`, значит `[data-testid="create-form-styles-wrapper"] textarea` вернул не-textarea — страница в Simple. Сначала переключить режим, потом заполнять.
+- Кнопка Create по-прежнему работает через `onClick` (у неё он есть, в отличие от табов).
 
 ---
 

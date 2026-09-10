@@ -59,10 +59,27 @@ window.__suno = {
   },
 
   // ---------- form setup ----------
+  // Mode tabs expose NO onClick — only onPointerDown/onMouseDown/onKeyDown,
+  // and they need a pointer event with the real fields, not a bare {type:'click'}.
+  firePointer(el, handler) {
+    const p = this.rp(el);
+    if (!p || typeof p[handler] !== 'function') return false;
+    p[handler]({
+      preventDefault() {}, stopPropagation() {}, nativeEvent: {},
+      currentTarget: el, target: el, type: 'pointerdown',
+      button: 0, buttons: 1, pointerId: 1, pointerType: 'mouse', isPrimary: true
+    });
+    return true;
+  },
+
   async openAdvanced() {
     const tab = [...document.querySelectorAll('[role="tab"]')]
       .find(t => t.innerText.trim() === 'Advanced');
-    if (tab && tab.getAttribute('aria-selected') !== 'true') tab.click();
+    if (tab && tab.getAttribute('aria-selected') !== 'true') {
+      this.firePointer(tab, 'onPointerDown');          // .click() does nothing here
+      await new Promise(r => setTimeout(r, 1500));
+      if (tab.getAttribute('aria-selected') !== 'true') this.firePointer(tab, 'onMouseDown');
+    }
     await new Promise(r => setTimeout(r, 1200));
     const mo = [...document.querySelectorAll('button')]
       .find(b => b.innerText.trim().startsWith('More Options'));

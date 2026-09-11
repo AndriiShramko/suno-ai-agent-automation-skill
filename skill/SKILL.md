@@ -10,6 +10,30 @@ version: 1.0.0
 
 Полная карта DOM и все рабочие/нерабочие приёмы: `reference/suno-dom-map.md` (в этой же папке). **Прочитай её перед первой генерацией в сессии.**
 
+## 🔴 Suno v6 (09.09.2026) — что изменилось
+
+- Модели: **v6**, **v6-wild** (платные), **v6-mini** (бесплатная). Всё до v6 отключено для новых генераций.
+- **Тумблера Instrumental больше нет: пустое поле Lyrics = инструментал.**
+- В More Options добавились Max Mode и Variety; Duration Auto/Custom на месте (10–360 с).
+- Коммерческие права с 03.09.2026 — только на **скачанные** треки (Pro: 20 загрузок/мес, стемы входят в ту же загрузку). Скачивать каждый финальный трек.
+- Карта DOM в `reference/suno-dom-map.md` снималась на v5.5 — **перед первой генерацией в сессии пересверить селекторы и обновить файл**.
+
+## Прежде чем генерировать
+
+**Трек делается на ВСЮ длину видео**, не короче. Длину добирать **текстом**, а не растягиванием: при ~55 BPM куплет ≈ 30 с, припев ≈ 25 с, проигрыш ≈ 30 с; на 5–6 минут нужно 4 куплета + припев ×5 + два проигрыша. Duration ставить `Custom = длина видео + 1–5 с`.
+
+**Длительность обязательна.** Если в задаче не названа длина видео (или желаемая длина трека) — **остановись и спроси**, не генерируй «примерно»: перегенерация тратит кредиты и время. Duration ставится на 2–5 с длиннее видео (слайдер шагает по 5 с).
+
+**Голос — случайный из пула.** Перед каждой новой песней открыть `reference/voice-pool.md` и честным `random.choice` выбрать голос (европейские вокальные традиции), поставить его первой фразой в Styles и отметить в таблице «использован». Два трека подряд с одним голосом — нельзя. В Exclude добавлять `soul, gospel, R&B, blues vocals, melisma, vocal runs, riffing, ad-libs, belting`.
+
+**Не душить модель промтом.** Styles — 100–150 символов обычными жанровыми словами, Exclude — до 40, слайдеры на дефолте 50/50, в лирике только `[Verse]/[Chorus]/[Instrumental]/[Outro]`. Длинный технический промт даёт механику без мелодии. **Припев обязателен** (`Verse → Chorus → Verse → Chorus → Instrumental → Chorus`), рифма — парная AABB, а длину не задирать: 12 строк на 5 минут = импровизация в пустоте.
+
+**Форма — предсказуемая.** Не писать `long instrumental passages`, `ends unresolved`, `suspended chord` — от них музыка расползается в «джазовую бесконечность». Писать `slow strophic ballad, steady and predictable, square eight-bar phrases; ONE four-chord progression repeated from beginning to end, no modulation, no improvisation, no solos; every instrumental section restates the same vocal melody; ends with a full resolution on the tonic`. В Exclude — `jazz, improvisation, solo, rubato, modulation, unresolved ending, suspended chord`. Style Influence поднимать до 75.
+
+**Звук — чистый студийный.** Не писать в стиле `analog tape`, `<год> recording`, `wow and flutter`, `lo-fi`, `vinyl` — вместо этого `pristine modern studio recording, clean and quiet, wide dynamic range, no tape hiss, no noise floor`, а в Exclude добавлять `tape hiss, vinyl crackle, lo-fi, vintage, cassette`. Винтажной должна быть манера письма и аранжировка, но не качество записи.
+
+Если пишешь лирику для владельца этого vault, сначала прочитай его требования к текстам: `01 - Projects/Музыка к 360-видео — метод Suno.md`, раздел «🔴 Требования Андрея к лирике» (никакой буквальщины, работа ассоциациями, обязательная небанальная рифма, мало слов).
+
 ## Быстрый путь
 
 1. `mcp__claude-in-chrome__navigate` → `https://suno.com/create`

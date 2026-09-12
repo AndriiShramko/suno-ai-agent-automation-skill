@@ -183,3 +183,48 @@ await fetch('https://studio-api-prod.suno.com/api/feed/v2?page=0', {headers:{Aut
 ```
 
 После находки — обновить этот файл, проставить новую дату проверки и запушить в публичное зеркало.
+
+---
+
+## 10. Подтверждено на v6 вживую (2026-09-12) — инструментальный бед, аккаунт Pro
+
+**Форма Advanced/More Options — карта раздела 1 подтверждена дословно.** `openAdvanced()` + `fill()` из `suno-helpers.js` отработали без изменений. `durationCustom()` открывает слайдер Duration (дефолт 180, диапазон 10–360, шаг 5) — подтверждено.
+
+**Слайдеры — `nudgeSlider` работает, но в скрытой вкладке нужно много вызовов.** Единичный вызов с `maxSteps=8` иногда сам ловит CDP-таймаут 45 с (проход не проходит все 8 шагов до истечения времени), но **прогресс не теряется** — слайдер уже сдвинулся на столько шагов, сколько успело пройти, и следующий вызов продолжает с реального `aria-valuenow`, а не с нуля. Практика: звать `nudgeSlider(label, target, 4)` (не 8) и просто повторять, пока `reached:true` — на скрытой вкладке 4 шага проходят с меньшим риском таймаута, чем 8.
+
+**Кнопка «More menu contents» (на странице `/song/<id>`) — открывается только связкой mousedown+click через React props, `.click()`/`onClick` в одиночку не срабатывают:**
+```js
+const btn = [...document.querySelectorAll('button[aria-label]')].find(b=>b.getAttribute('aria-label')==='More menu contents');
+const p = rp(btn); // тот же rp() из helpers
+p.onMouseDown({preventDefault(){},stopPropagation(){},nativeEvent:{},currentTarget:btn,target:btn,type:'mousedown',button:0});
+await new Promise(r => setTimeout(r, 200));
+p.onClick({preventDefault(){},stopPropagation(){},nativeEvent:{},currentTarget:btn,target:btn,type:'click',button:0});
+```
+Открывшееся меню — **не** `[role="menu"]`/`[role="menuitem"]` (кастомная вёрстка, не ARIA), искать текстом или координатами через скриншот. Пункт «Download» открывает модалку с форматами (M4A/MP3/WAV/MP4 video asset/Stems & MIDI) и кнопкой «Unlock & Download» (на уже разлоченной песне — просто «Download»).
+
+🔴 **Круглая иконка-стрелка рядом с «Edit» на превью обложки — это НЕ скачивание трека, а `aria-label="Download Cover Image"`.** Даёт JPEG обложки (несколько сотен КБ), не аудио. Не путать с загрузкой аудио.
+
+**Скачивание — MP3 готов быстро (десятки секунд), WAV может «зависать» в `Preparing…` на 2–10+ минут.** Оба формата в модалке показывают спиннер → галочку по готовности. Родной клик по кнопке скачивания срабатывает и пишет файл в Downloads как `<uuid>.tmp` без расширения (как и у Cartesia) — но **для WAV это ненадёжно**: несколько раз файл в Downloads не появлялся десятками минут, хотя UI показывал прогресс.
+
+**Надёжный обходной путь для WAV, если родной клик не долетел до диска:**
+1. Прочитать сетевой лог (`read_network_requests`, фильтр `s3.amazonaws.com`) — там обнаруживается presigned-URL вида
+   `https://suno-data-uploads.s3.amazonaws.com/studio/uploads/<clip_id>_paid_wm.wav?response-content-type=audio%2Fwav&AWSAccessKeyId=...&Signature=...&Expires=...`.
+   Появляется в логе САМ, без дополнительных действий — сайт делает этот запрос внутри себя как только конвертация в WAV готова на сервере.
+   🔴 Эта ссылка отдаёт `403 Forbidden` при запросе из Bash/curl (другой network egress, не проходит), но `200` при `fetch()` из контекста страницы — брать только через `javascript_tool`.
+2. Скачать через страницу как blob, **не дожидаясь результата синхронно** — обернуть в async IIFE, писать статус в `window.__status`, а сам вызов `javascript_exec` вернуть сразу после запуска (`fetch` может занять несколько минут в скрытой/фоновой вкладке из-за троттлинга):
+   ```js
+   window.__dl = 'starting';
+   (async () => {
+     const r = await fetch(s3Url); window.__dl = 'fetched ' + r.status;
+     const blob = await r.blob(); window.__dl = 'blobbed ' + blob.size;
+     const a = document.createElement('a');
+     a.href = URL.createObjectURL(blob); a.download = 'name.wav';
+     document.body.appendChild(a); a.click(); a.remove();
+     window.__dl = 'clicked ' + blob.size;
+   })();
+   'kicked off';
+   ```
+3. Поллить `window.__dl` короткими вызовами и параллельно проверять папку Downloads (`find ~/Downloads -maxdepth 1 -mmin -N -type f`) — файл материализуется как `<uuid>.tmp`, реальный WAV (проверено побайтово: валидный RIFF/WAVE, PCM, 48 kHz, стерео, 16 бит), просто без расширения. Переименовать/переместить вручную.
+4. На двух реальных генерациях (2026-09-12) статус застревал на `'fetched, status=200'` от 2 до 8+ минут прежде чем `blob()` резолвился — это троттлинг фонового таба Chrome на тяжёлых сетевых операциях, а не ошибка. Терпеть, не прерывать.
+
+**Credits/billing на Pro для инструментала:** `total_credits_left` и `monthly_usage` не изменились до/после двух полных генераций (190 с каждая) — на Pro-плане инструментальные беды, похоже, не тратят видимый кредитный счётчик так же, как обычные генерации с вокалом (либо считаются отдельным лимитом). Не проверено на бесплатном плане.
